@@ -2,7 +2,13 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#12121a">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="StickyMesh-mobile-192.png">
 <title>StickyMesh © — 3D Metaball Sculptor</title>
 <link rel="icon" type="image/x-icon" href="StickyMesh.ico">
 <link rel="shortcut icon" href="StickyMesh.ico">
@@ -62,14 +68,23 @@
     background: var(--scrollbar-track);
   }
 
+  html, body {
+    width: 100%;
+    height: 100%;
+    overscroll-behavior: none;
+  }
+
   body {
     background: var(--bg);
     color: var(--text);
     font-family: var(--font-ui);
     height: 100vh;
+    height: 100dvh;
     overflow: hidden;
     display: flex;
     flex-direction: column;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
   }
 
   header {
@@ -499,15 +514,217 @@
     color: var(--accent);
   }
 
+
+
+  /* Responsive/mobile shell */
+  .mobile-only { display: none; }
+  .mobile-icon {
+    display: none;
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    line-height: 1;
+  }
+
+  .drawer-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(2, 3, 8, 0.62);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+    z-index: 390;
+    backdrop-filter: blur(2px);
+  }
+
+  .mobile-dock { display: none; }
+  .mobile-drawer-head { display: none; }
+
+  @media (pointer: coarse) {
+    .btn, .mode-btn, select { min-height: 44px; }
+    .checkbox-row { min-height: 40px; }
+    .checkbox-row input[type="checkbox"] { width: 20px; height: 20px; }
+    input[type="range"] { height: 8px; margin: 10px 0 14px; }
+    input[type="range"]::-webkit-slider-thumb { width: 24px; height: 24px; }
+    input[type="range"]::-moz-range-thumb { width: 24px; height: 24px; border: 0; border-radius: 50%; background: var(--accent); }
+    .color-swatch { width: 34px; height: 34px; }
+    .ball-item { min-height: 44px; }
+    .ball-item .del { display: inline-flex; width: 36px; height: 36px; align-items: center; justify-content: center; }
+  }
+
+  @media (max-width: 900px) {
+    :root { --mobile-header-h: 58px; --mobile-dock-h: 64px; }
+
+    header {
+      height: calc(var(--mobile-header-h) + env(safe-area-inset-top));
+      padding: env(safe-area-inset-top) 10px 0;
+      gap: 8px;
+      z-index: 500;
+    }
+
+    .logo { min-width: 0; gap: 7px; }
+    .logo img, .logo img[style] { height: 42px !important; max-width: min(48vw, 250px); }
+    .logo span { font-size: 0.58rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .mobile-only { display: inline-flex; }
+    .mobile-icon { display: inline-flex; flex: 0 0 auto; }
+
+    .header-actions {
+      position: fixed;
+      top: calc(var(--mobile-header-h) + env(safe-area-inset-top) + 8px);
+      right: 10px;
+      width: min(310px, calc(100vw - 20px));
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      padding: 12px;
+      background: rgba(18, 18, 26, 0.98);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      box-shadow: 0 20px 55px rgba(0,0,0,0.5);
+      opacity: 0;
+      transform: translateY(-8px) scale(0.98);
+      transform-origin: top right;
+      pointer-events: none;
+      transition: opacity 0.16s ease, transform 0.16s ease;
+      z-index: 510;
+    }
+    .header-actions.open { opacity: 1; transform: none; pointer-events: auto; }
+    .header-actions .btn { width: 100%; min-height: 46px; padding: 8px 10px; white-space: normal; }
+    .header-actions .btn-primary { grid-column: 1 / -1; }
+
+    .main { position: relative; width: 100%; min-width: 0; }
+    .canvas-area { width: 100%; min-width: 0; }
+
+    .sidebar, .right-panel {
+      position: fixed;
+      top: calc(var(--mobile-header-h) + env(safe-area-inset-top));
+      bottom: calc(var(--mobile-dock-h) + env(safe-area-inset-bottom));
+      width: min(88vw, 360px);
+      max-width: 360px;
+      z-index: 450;
+      box-shadow: 0 18px 55px rgba(0,0,0,0.55);
+      transition: transform 0.22s ease;
+      -webkit-overflow-scrolling: touch;
+      overscroll-behavior: contain;
+    }
+    .sidebar { left: 0; transform: translateX(-103%); border-right: 1px solid var(--border); }
+    .right-panel { right: 0; transform: translateX(103%); border-left: 1px solid var(--border); }
+    .sidebar.mobile-open, .right-panel.mobile-open { transform: translateX(0); }
+    body.mobile-ui-open .drawer-backdrop { opacity: 1; pointer-events: auto; }
+
+    .mobile-drawer-head {
+      position: sticky;
+      top: 0;
+      z-index: 3;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      min-height: 54px;
+      padding: 7px 10px 7px 16px;
+      background: rgba(18,18,26,0.98);
+      border-bottom: 1px solid var(--border);
+      font: 700 0.78rem var(--font-display);
+      letter-spacing: 0.04em;
+      backdrop-filter: blur(10px);
+    }
+    .mobile-drawer-head .mobile-icon { display: inline-flex; }
+
+    .sidebar-section { padding: 16px; }
+    .sidebar-title { font-size: 0.72rem; }
+    .control-label, .control-value, .checkbox-row label, select { font-size: 0.78rem; }
+    .mode-btn { font-size: 0.72rem; min-height: 48px; }
+    .ball-list { max-height: none; }
+
+    .mobile-dock {
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      height: calc(var(--mobile-dock-h) + env(safe-area-inset-bottom));
+      padding: 7px 8px calc(7px + env(safe-area-inset-bottom));
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 7px;
+      background: rgba(18,18,26,0.96);
+      border-top: 1px solid var(--border);
+      backdrop-filter: blur(12px);
+      z-index: 430;
+    }
+    .dock-btn {
+      min-width: 0;
+      min-height: 48px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 2px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: var(--surface2);
+      color: var(--text);
+      font: 600 0.66rem var(--font-ui);
+      cursor: pointer;
+    }
+    .dock-btn .dock-icon { font-size: 1rem; line-height: 1; }
+    .dock-btn.active { color: var(--accent); border-color: var(--accent); background: rgba(124,92,252,0.14); }
+
+    .info-bar {
+      left: 10px;
+      right: 10px;
+      bottom: calc(var(--mobile-dock-h) + env(safe-area-inset-bottom) + 10px);
+      transform: none;
+      width: auto;
+      max-width: none;
+      padding: 7px 10px;
+      font-size: 0.6rem;
+      line-height: 1.35;
+      text-align: center;
+      white-space: normal;
+    }
+    .stats { top: 8px; right: 8px; padding: 5px 8px; font-size: 0.56rem; line-height: 1.55; }
+    .toast {
+      top: calc(var(--mobile-header-h) + env(safe-area-inset-top) + 10px);
+      max-width: calc(100vw - 24px);
+      text-align: center;
+      padding: 9px 14px;
+    }
+
+    .modal-overlay { padding: calc(8px + env(safe-area-inset-top)) 8px calc(8px + env(safe-area-inset-bottom)); }
+    .modal-card { width: 100%; max-height: 100%; border-radius: 13px; }
+    .modal-header { padding: 12px; }
+    .modal-body { padding: 12px; }
+    .hotkey-grid { grid-template-columns: 1fr 1fr; }
+
+    #canvas { cursor: default; }
+  }
+
+  @media (max-width: 560px) {
+    .logo span { display: none; }
+    .header-actions { grid-template-columns: 1fr; }
+    .header-actions .btn-primary { grid-column: auto; }
+    .stats { opacity: 0.88; }
+    .hotkey-grid { grid-template-columns: 1fr; }
+  }
+
+  @media (max-height: 520px) and (orientation: landscape) and (max-width: 900px) {
+    :root { --mobile-header-h: 48px; --mobile-dock-h: 54px; }
+    .logo img, .logo img[style] { height: 36px !important; }
+    .mobile-icon { width: 40px; height: 40px; }
+    .mobile-dock { padding-top: 4px; }
+    .dock-btn { min-height: 42px; flex-direction: row; }
+    .info-bar { display: none; }
+  }
+
 </style>
 </head>
 <body>
 
 <header>
-  <div style="display:flex;align-items:center;gap:12px">
-    <div class="logo"><img src="StickyMesh.png" style="height: 120px; width: auto; object-fit: contain;"><span>©v1.1 Brought to you by CRUXTAIN™2026</span></div>
-  </div>
-  <div class="header-actions">
+  <div class="logo"><img src="StickyMesh-header.png" alt="StickyMesh" style="height: 120px; width: auto; object-fit: contain;"><span>©v1.2 Mobile · CRUXTAIN™ 2026</span></div>
+  <div class="header-actions" id="header-actions" aria-label="Project actions">
     <button class="btn" onclick="saveProject()">Save Project</button>
     <button class="btn" onclick="loadProject()">Load Project</button>
     <button class="btn" onclick="clearAll()">Clear All</button>
@@ -515,7 +732,9 @@
     <button class="btn btn-primary" onclick="exportGLB()">⬇ Export GLB</button>
     <button class="btn" onclick="openAboutDialog()">About</button>
   </div>
+  <button class="btn mobile-icon mobile-only" id="mobile-actions-toggle" type="button" aria-label="Open project actions" aria-expanded="false" onclick="toggleHeaderActions()">⋮</button>
 </header>
+<div class="drawer-backdrop" id="drawer-backdrop" onclick="closeMobileUI()"></div>
 
 <div class="modal-overlay" id="about-modal" onclick="handleAboutOverlayClick(event)">
   <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="about-modal-title">
@@ -537,13 +756,23 @@ software or marks without permission is prohibited. You may use and study it fre
       <div class="info-card">
         <h3>Quick Use Guide</h3>
         <ol>
-          <li>Use the left toolbar to choose a tool, then click in the viewport to add or work on metaballs.</li>
-          <li>Select a ball to adjust its size, strength, color, or material-related appearance controls.</li>
-          <li>Use the right sidebar for custom presets, export options, and transform helpers.</li>
+          <li>Choose a sculpting tool from the left toolbar. On phones and tablets, tap <strong>Sculpt</strong> in the bottom dock to open these controls.</li>
+          <li>Tap or click a ball to work with it, then adjust its size, strength, color, and material-related appearance controls.</li>
+          <li>Use the right sidebar—or the mobile <strong>Scene</strong> drawer—for lighting, presets, export options, and transform helpers.</li>
           <li>Save Project stores the editable StickyMesh © scene. Load Project restores it later for continued sculpting.</li>
           <li>Convert to Mesh bakes the current metaball result. Export GLB exports the current result as a .glb file.</li>
           <li>Undo and redo preserve editing history across the sculpt workflow, including major transform and project-state actions.</li>
         </ol>
+      </div>
+
+      <div class="info-card">
+        <h3>Touch Controls</h3>
+        <ul>
+          <li><strong>Tap:</strong> use the active Add, Select, or Delete tool.</li>
+          <li><strong>Drag:</strong> move or scale a ball with the corresponding tool.</li>
+          <li><strong>View mode + one finger:</strong> orbit around the sculpture.</li>
+          <li><strong>Two fingers:</strong> pan the view and pinch to zoom at any time.</li>
+        </ul>
       </div>
 
       <div class="info-card">
@@ -564,15 +793,17 @@ software or marks without permission is prohibited. You may use and study it fre
 
 <div class="main">
   <!-- Left Sidebar -->
-  <div class="sidebar">
+  <div class="sidebar" aria-label="Sculpt controls">
+    <div class="mobile-drawer-head"><span>Sculpt Controls</span><button type="button" class="btn mobile-icon" aria-label="Close sculpt controls" onclick="closeMobileUI()">×</button></div>
     <div class="sidebar-section">
       <div class="sidebar-title">Tool</div>
       <div class="mode-buttons">
-        <div class="mode-btn active" id="btn-add" onclick="setTool('add')">+ Add Ball</div>
-        <div class="mode-btn" id="btn-select" onclick="setTool('select')">◉ Select</div>
-        <div class="mode-btn" id="btn-move" onclick="setTool('move')">↔ Move</div>
-        <div class="mode-btn" id="btn-scale" onclick="setTool('scale')">⊕ Scale</div>
-        <div class="mode-btn" id="btn-delete" onclick="setTool('delete')">✕ Delete</div>
+        <button type="button" class="mode-btn active" id="btn-add" onclick="setTool('add')">+ Add Ball</button>
+        <button type="button" class="mode-btn" id="btn-select" onclick="setTool('select')">◉ Select</button>
+        <button type="button" class="mode-btn" id="btn-move" onclick="setTool('move')">↔ Move</button>
+        <button type="button" class="mode-btn" id="btn-scale" onclick="setTool('scale')">⊕ Scale</button>
+        <button type="button" class="mode-btn" id="btn-delete" onclick="setTool('delete')">✕ Delete</button>
+        <button type="button" class="mode-btn" id="btn-view" onclick="setTool('view')">◎ View</button>
       </div>
     </div>
 
@@ -643,7 +874,7 @@ software or marks without permission is prohibited. You may use and study it fre
   <!-- Canvas -->
   <div class="canvas-area">
     <canvas id="canvas"></canvas>
-    <div class="info-bar" id="info-bar">LMB: Add ball &nbsp;|&nbsp; RMB+Drag: Orbit &nbsp;|&nbsp; Scroll: Zoom &nbsp;|&nbsp; MMB: Pan</div>
+    <div class="info-bar" id="info-bar">Tap/click: Add ball &nbsp;|&nbsp; View tool: Orbit &nbsp;|&nbsp; Two fingers: Pan + pinch zoom</div>
     <div class="stats">
       Balls: <span class="val" id="stat-balls">0</span><br>
       Triangles: <span class="val" id="stat-tris">0</span><br>
@@ -652,7 +883,8 @@ software or marks without permission is prohibited. You may use and study it fre
   </div>
 
   <!-- Right Panel -->
-  <div class="right-panel">
+  <div class="right-panel" aria-label="Scene and export controls">
+    <div class="mobile-drawer-head"><span>Scene &amp; Export</span><button type="button" class="btn mobile-icon" aria-label="Close scene controls" onclick="closeMobileUI()">×</button></div>
     <div class="sidebar-section">
       <div class="sidebar-title">Lighting</div>
       <div class="control-row">
@@ -706,6 +938,14 @@ software or marks without permission is prohibited. You may use and study it fre
   </div>
 </div>
 
+
+<div class="mobile-dock" id="mobile-dock" aria-label="Mobile navigation">
+  <button type="button" class="dock-btn" id="dock-sculpt" onclick="toggleMobilePanel('left')"><span class="dock-icon">✦</span><span>Sculpt</span></button>
+  <button type="button" class="dock-btn" id="dock-view" onclick="activateMobileView()"><span class="dock-icon">◎</span><span>View</span></button>
+  <button type="button" class="dock-btn" id="dock-scene" onclick="toggleMobilePanel('right')"><span class="dock-icon">☼</span><span>Scene</span></button>
+  <button type="button" class="dock-btn" id="dock-file" onclick="toggleHeaderActions()"><span class="dock-icon">⋮</span><span>File</span></button>
+</div>
+
 <div class="toast" id="toast"></div>
 <input type="file" id="project-file-input" accept=".json,.stickymesh" style="display:none">
 
@@ -716,6 +956,18 @@ software or marks without permission is prohibited. You may use and study it fre
 // ============================================================
 
 const canvas = document.getElementById('canvas');
+const mobileMedia = window.matchMedia('(max-width: 900px)');
+const coarsePointerMedia = window.matchMedia('(pointer: coarse)');
+const lowPowerDevice = coarsePointerMedia.matches && (
+  (Number.isFinite(navigator.deviceMemory) && navigator.deviceMemory <= 4) ||
+  (Number.isFinite(navigator.hardwareConcurrency) && navigator.hardwareConcurrency <= 4)
+);
+const activeTouchPointers = new Map();
+let touchPrimary = null;
+let touchGesture = null;
+let touchHadMulti = false;
+let canvasResizeObserver = null;
+
 let renderer, scene, camera, raycaster;
 let orbitTarget = new THREE.Vector3(0, 0, 0);
 let isOrbiting = false, isPanning = false;
@@ -1072,8 +1324,8 @@ let moveAxisLock = null; // 'x' | 'y' | 'z' | null
 function init() {
   // Renderer
   renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
-  renderer.shadowMap.enabled = true;
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, coarsePointerMedia.matches ? 1.25 : 1.5));
+  renderer.shadowMap.enabled = !lowPowerDevice;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   renderer.setClearColor(0x0a0a0f);
   // Color management (prevents harsh/inverted-looking shading on many displays)
@@ -1105,7 +1357,7 @@ function init() {
   dirLight.name = 'dirLight';
   dirLight.position.set(5, 10, 7);
   dirLight.castShadow = true;
-  dirLight.shadow.mapSize.set(1024, 1024);
+  dirLight.shadow.mapSize.set(coarsePointerMedia.matches ? 512 : 1024, coarsePointerMedia.matches ? 512 : 1024);
   scene.add(dirLight);
 
   const fillLight = new THREE.DirectionalLight(0x8080ff, 0.25);
@@ -1146,15 +1398,21 @@ function init() {
     }
   });
   
-  // Resize
-  window.addEventListener('resize', onResize);
+  // Resize (window + actual canvas container + mobile visual viewport)
+  window.addEventListener('resize', onResize, { passive: true });
+  window.addEventListener('orientationchange', () => setTimeout(onResize, 60), { passive: true });
+  if (window.visualViewport) window.visualViewport.addEventListener('resize', onResize, { passive: true });
+  if ('ResizeObserver' in window) {
+    canvasResizeObserver = new ResizeObserver(onResize);
+    canvasResizeObserver.observe(canvas.parentElement);
+  }
   onResize();
   
   // Events (Pointer Events for robust dragging; preserves mouse behavior)
   canvas.addEventListener('pointerdown', onPointerDown);
   canvas.addEventListener('pointermove', onPointerMove);
   window.addEventListener('pointerup', onPointerUp);
-  canvas.addEventListener('pointercancel', onPointerUp);
+  canvas.addEventListener('pointercancel', onPointerCancel);
   canvas.addEventListener('wheel', onWheel, { passive: false });
   canvas.addEventListener('contextmenu', e => e.preventDefault());
 
@@ -1179,6 +1437,10 @@ function init() {
   }
 
   document.addEventListener('visibilitychange', () => { if (document.hidden) cancelInteractions(); });
+  if (mobileMedia.addEventListener) mobileMedia.addEventListener('change', refreshResponsiveUI);
+  else if (mobileMedia.addListener) mobileMedia.addListener(refreshResponsiveUI);
+  refreshResponsiveUI(true);
+
 
   const _undoableChanges = [
     ['mat-preset', 'Material'],
@@ -1206,14 +1468,20 @@ function init() {
     el.addEventListener('blur', commit);
   });
 
+  document.querySelectorAll('#header-actions .btn').forEach(btn => {
+    btn.addEventListener('click', () => { if (mobileMedia.matches) closeMobileUI(); });
+  });
+
 // Start render loop
   animate();
 }
 
 function onResize() {
-  const w = canvas.parentElement.clientWidth;
-  const h = canvas.parentElement.clientHeight;
-  renderer.setSize(w, h);
+  if (!renderer || !camera || !canvas.parentElement) return;
+  const rect = canvas.parentElement.getBoundingClientRect();
+  const w = Math.max(1, Math.floor(rect.width));
+  const h = Math.max(1, Math.floor(rect.height));
+  renderer.setSize(w, h, false);
   camera.aspect = w / h;
   camera.updateProjectionMatrix();
 }
@@ -1755,21 +2023,167 @@ function cancelInteractions() {
   if (dragging) commitUndoIfChanged();
   dragging = false;
   dragBallIndex = -1;
+  activeTouchPointers.clear();
+  touchPrimary = null;
+  touchGesture = null;
+  touchHadMulti = false;
+}
+
+function _touchPoint(e) {
+  return { x: e.clientX, y: e.clientY, startX: e.clientX, startY: e.clientY, moved: false };
+}
+
+function _touchCenterAndDistance() {
+  const pts = Array.from(activeTouchPointers.values());
+  if (pts.length < 2) return null;
+  const a = pts[0], b = pts[1];
+  return {
+    cx: (a.x + b.x) * 0.5,
+    cy: (a.y + b.y) * 0.5,
+    distance: Math.max(1, Math.hypot(b.x - a.x, b.y - a.y)),
+  };
+}
+
+function _beginTwoFingerGesture() {
+  if (dragging) commitUndoIfChanged();
+  dragging = false;
+  dragBallIndex = -1;
+  isOrbiting = false;
+  isPanning = false;
+  touchHadMulti = true;
+  touchGesture = _touchCenterAndDistance();
+}
+
+function _applyTwoFingerGesture() {
+  const now = _touchCenterAndDistance();
+  if (!now || !touchGesture) return;
+
+  const centerDx = now.cx - touchGesture.cx;
+  const centerDy = now.cy - touchGesture.cy;
+  const zoomRatio = touchGesture.distance / now.distance;
+  radius = Math.max(1, Math.min(50, radius * zoomRatio));
+
+  const panSpeed = radius * 0.0018;
+  const forward = _tmpV3a;
+  camera.getWorldDirection(forward);
+  const right = _tmpV3b.crossVectors(forward, camera.up).normalize();
+  const up = _tmpV3c.copy(camera.up).normalize();
+  orbitTarget.addScaledVector(right, -centerDx * panSpeed);
+  orbitTarget.addScaledVector(up, centerDy * panSpeed);
+  updateCamera();
+  touchGesture = now;
 }
 
 function onPointerDown(e) {
-  // Keep existing logic by delegating to onMouseDown.
-  // Capture pointer so move/up continue even if cursor leaves the canvas.
   try { canvas.setPointerCapture(e.pointerId); } catch (_) {}
-  onMouseDown(e);
+
+  if (e.pointerType !== 'touch') {
+    onMouseDown(e);
+    return;
+  }
+
+  e.preventDefault();
+  activeTouchPointers.set(e.pointerId, _touchPoint(e));
+
+  if (activeTouchPointers.size >= 2) {
+    _beginTwoFingerGesture();
+    return;
+  }
+
+  touchHadMulti = false;
+  touchPrimary = { id: e.pointerId, startX: e.clientX, startY: e.clientY, moved: false };
+  lastMouse = { x: e.clientX, y: e.clientY };
+
+  if (currentTool === 'view') {
+    isOrbiting = true;
+  } else if (currentTool === 'move' || currentTool === 'scale') {
+    onMouseDown(e);
+  }
 }
 
 function onPointerMove(e) {
-  onMouseMove(e);
+  if (e.pointerType !== 'touch') {
+    onMouseMove(e);
+    return;
+  }
+
+  e.preventDefault();
+  const pt = activeTouchPointers.get(e.pointerId);
+  if (!pt) return;
+  pt.x = e.clientX;
+  pt.y = e.clientY;
+  if (Math.hypot(pt.x - pt.startX, pt.y - pt.startY) > 8) pt.moved = true;
+  activeTouchPointers.set(e.pointerId, pt);
+  if (touchPrimary && touchPrimary.id === e.pointerId && pt.moved) touchPrimary.moved = true;
+
+  if (activeTouchPointers.size >= 2 || touchGesture) {
+    _applyTwoFingerGesture();
+    return;
+  }
+
+  if (currentTool === 'view' && isOrbiting) {
+    const dx = e.clientX - lastMouse.x;
+    const dy = e.clientY - lastMouse.y;
+    theta -= dx * 0.012;
+    phi = Math.max(0.05, Math.min(Math.PI - 0.05, phi + dy * 0.012));
+    updateCamera();
+    lastMouse = { x: e.clientX, y: e.clientY };
+  } else if (dragging) {
+    onMouseMove(e);
+  }
 }
 
 function onPointerUp(e) {
-  onMouseUp(e);
+  if (e.pointerType !== 'touch') {
+    onMouseUp(e);
+    try { canvas.releasePointerCapture(e.pointerId); } catch (_) {}
+    return;
+  }
+
+  e.preventDefault();
+  const ended = activeTouchPointers.get(e.pointerId);
+  const wasMulti = touchHadMulti || !!touchGesture;
+  activeTouchPointers.delete(e.pointerId);
+
+  if (!wasMulti && touchPrimary && touchPrimary.id === e.pointerId) {
+    const moved = touchPrimary.moved || (ended && ended.moved);
+    if (!moved && (currentTool === 'add' || currentTool === 'select' || currentTool === 'delete')) {
+      onMouseDown(e);
+    }
+    if (currentTool === 'move' || currentTool === 'scale') onMouseUp(e);
+  }
+
+  if (activeTouchPointers.size >= 2) {
+    touchGesture = _touchCenterAndDistance();
+  } else if (activeTouchPointers.size === 1 && wasMulti) {
+    const [id, remaining] = activeTouchPointers.entries().next().value;
+    remaining.startX = remaining.x;
+    remaining.startY = remaining.y;
+    remaining.moved = false;
+    touchPrimary = { id, startX: remaining.x, startY: remaining.y, moved: true };
+    touchGesture = null;
+    isOrbiting = false;
+  } else {
+    touchPrimary = null;
+    touchGesture = null;
+    touchHadMulti = false;
+    isOrbiting = false;
+    isPanning = false;
+  }
+
+  try { canvas.releasePointerCapture(e.pointerId); } catch (_) {}
+}
+
+function onPointerCancel(e) {
+  activeTouchPointers.delete(e.pointerId);
+  if (dragging) commitUndoIfChanged();
+  dragging = false;
+  dragBallIndex = -1;
+  isOrbiting = false;
+  isPanning = false;
+  touchPrimary = null;
+  touchGesture = null;
+  touchHadMulti = false;
   try { canvas.releasePointerCapture(e.pointerId); } catch (_) {}
 }
 
@@ -1864,6 +2278,12 @@ function onKeyDown(e) {
 
 function onMouseDown(e) {
   e.preventDefault();
+
+  if (e.button === 0 && currentTool === 'view') {
+    isOrbiting = true;
+    lastMouse = { x: e.clientX, y: e.clientY };
+    return;
+  }
 
   if (e.button === 2) { // right click = orbit
     isOrbiting = true;
@@ -2017,14 +2437,90 @@ function setTool(tool) {
   document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
   document.getElementById('btn-' + tool).classList.add('active');
 
-  const infoMap = {
-    add: 'LMB: Add ball &nbsp;|&nbsp; RMB+Drag: Orbit &nbsp;|&nbsp; Scroll: Zoom &nbsp;|&nbsp; MMB: Pan',
-    select: 'LMB: Select ball &nbsp;|&nbsp; RMB+Drag: Orbit &nbsp;|&nbsp; Scroll: Zoom',
-    move: 'LMB+Drag: Move ball (Shift+X/Y/Z: Axis lock, Esc: Clear) &nbsp;|&nbsp; RMB+Drag: Orbit &nbsp;|&nbsp; Scroll: Zoom',
-    scale: 'LMB+Drag: Scale ball &nbsp;|&nbsp; RMB+Drag: Orbit &nbsp;|&nbsp; Scroll: Zoom',
-    delete: 'LMB: Delete ball &nbsp;|&nbsp; RMB+Drag: Orbit &nbsp;|&nbsp; Scroll: Zoom',
+  const mobile = mobileMedia.matches || coarsePointerMedia.matches;
+  const desktopInfo = {
+    add: 'Click: Add ball &nbsp;|&nbsp; View tool or RMB+drag: Orbit &nbsp;|&nbsp; Wheel: Zoom &nbsp;|&nbsp; MMB: Pan',
+    select: 'Click: Select ball &nbsp;|&nbsp; View tool or RMB+drag: Orbit &nbsp;|&nbsp; Wheel: Zoom',
+    move: 'Drag: Move ball (Shift+X/Y/Z: Axis lock) &nbsp;|&nbsp; RMB+drag: Orbit',
+    scale: 'Drag horizontally: Scale ball &nbsp;|&nbsp; RMB+drag: Orbit',
+    delete: 'Click: Delete ball &nbsp;|&nbsp; RMB+drag: Orbit',
+    view: 'Drag: Orbit &nbsp;|&nbsp; Wheel: Zoom &nbsp;|&nbsp; MMB: Pan',
   };
-  document.getElementById('info-bar').innerHTML = infoMap[tool];
+  const mobileInfo = {
+    add: 'Tap to add · Two fingers pan and pinch zoom',
+    select: 'Tap a ball to select · Two fingers pan and pinch zoom',
+    move: 'Drag a ball to move · Two fingers pan and pinch zoom',
+    scale: 'Drag horizontally on a ball to scale',
+    delete: 'Tap a ball to delete',
+    view: 'Drag to orbit · Two fingers pan and pinch zoom',
+  };
+  document.getElementById('info-bar').innerHTML = (mobile ? mobileInfo : desktopInfo)[tool];
+  document.getElementById('dock-view')?.classList.toggle('active', tool === 'view');
+  canvas.style.cursor = tool === 'view' ? 'grab' : (tool === 'add' ? 'crosshair' : 'default');
+}
+
+
+function refreshResponsiveUI(initial = false) {
+  const mobile = mobileMedia.matches;
+  document.body.classList.toggle('is-mobile-layout', mobile);
+  if (!mobile) closeMobileUI();
+
+  // Start mobile devices at a more practical quality level, without overriding later user choices.
+  if (initial && mobile && coarsePointerMedia.matches && resolution === 40) {
+    resolution = lowPowerDevice ? 25 : 30;
+    const slider = document.getElementById('ctrl-res');
+    const label = document.getElementById('val-res');
+    if (slider) slider.value = String(resolution);
+    if (label) label.textContent = String(resolution);
+    meshDirty = true;
+  }
+  setTool(currentTool);
+  requestAnimationFrame(onResize);
+}
+
+function closeMobileUI() {
+  document.querySelector('.sidebar')?.classList.remove('mobile-open');
+  document.querySelector('.right-panel')?.classList.remove('mobile-open');
+  document.getElementById('header-actions')?.classList.remove('open');
+  document.body.classList.remove('mobile-ui-open');
+  document.querySelectorAll('.dock-btn').forEach(btn => {
+    if (btn.id !== 'dock-view') btn.classList.remove('active');
+  });
+  const actionToggle = document.getElementById('mobile-actions-toggle');
+  if (actionToggle) actionToggle.setAttribute('aria-expanded', 'false');
+}
+
+function toggleMobilePanel(side) {
+  if (!mobileMedia.matches) return;
+  const panel = side === 'right' ? document.querySelector('.right-panel') : document.querySelector('.sidebar');
+  const other = side === 'right' ? document.querySelector('.sidebar') : document.querySelector('.right-panel');
+  const shouldOpen = !panel?.classList.contains('mobile-open');
+  closeMobileUI();
+  if (shouldOpen && panel) {
+    panel.classList.add('mobile-open');
+    document.body.classList.add('mobile-ui-open');
+    document.getElementById(side === 'right' ? 'dock-scene' : 'dock-sculpt')?.classList.add('active');
+  }
+}
+
+function toggleHeaderActions() {
+  const actions = document.getElementById('header-actions');
+  if (!actions) return;
+  if (!mobileMedia.matches) return;
+  const shouldOpen = !actions.classList.contains('open');
+  closeMobileUI();
+  if (shouldOpen) {
+    actions.classList.add('open');
+    document.body.classList.add('mobile-ui-open');
+    document.getElementById('dock-file')?.classList.add('active');
+    document.getElementById('mobile-actions-toggle')?.setAttribute('aria-expanded', 'true');
+  }
+}
+
+function activateMobileView() {
+  closeMobileUI();
+  setTool('view');
+  showToast('View mode: drag to orbit, pinch to zoom');
 }
 
 function updateBallParam(param, val) {
@@ -2883,6 +3379,7 @@ function showToast(msg) {
 // ============================================================
 
 let lastRebuild = 0;
+const meshRebuildInterval = coarsePointerMedia.matches ? (lowPowerDevice ? 190 : 150) : 100;
 
 function animate() {
   requestAnimationFrame(animate);
@@ -2897,7 +3394,7 @@ function animate() {
   }
 
   // Throttle rebuild
-  if (meshDirty && now - lastRebuild > 100) {
+  if (meshDirty && now - lastRebuild > meshRebuildInterval) {
     rebuildMesh();
     lastRebuild = now;
   }
@@ -2908,10 +3405,13 @@ function animate() {
 // Init
 init();
 renderCustomPresets();
-showToast('Welcome to StickyMesh ©! Click to add balls.');
+showToast(coarsePointerMedia.matches ? 'Welcome! Tap Sculpt to begin.' : 'Welcome to StickyMesh ©! Click to add balls.');
 
 document.addEventListener('keydown', (event) => {
-  if (event.key === 'Escape') closeAboutDialog();
+  if (event.key === 'Escape') {
+    closeAboutDialog();
+    closeMobileUI();
+  }
 });
 </script>
 </body>
