@@ -31,10 +31,25 @@
     --text: #e8e8f0;
     --muted: #666680;
     --green: #5cfca0;
+    --ui-scale: 1;
+    --ui-font-size: 16px;
+    --header-height: 52px;
+    --header-padding-x: 20px;
+    --logo-height: 34px;
+    --left-panel-width: 240px;
+    --right-panel-width: 200px;
+    --mobile-header-h: 58px;
+    --mobile-dock-h: 64px;
+    --mobile-logo-height: 42px;
+    --mobile-panel-max-width: 360px;
+    --mobile-landscape-header-h: 48px;
+    --mobile-landscape-dock-h: 54px;
+    --mobile-landscape-logo-height: 36px;
   }
 
 
   html {
+    font-size: var(--ui-font-size);
     scrollbar-color: #6f52f7 var(--scrollbar-track);
     scrollbar-width: thin;
   }
@@ -91,8 +106,8 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 0 20px;
-    height: 52px;
+    padding: 0 var(--header-padding-x);
+    height: var(--header-height);
     border-bottom: 1px solid var(--border);
     background: var(--surface);
     flex-shrink: 0;
@@ -107,7 +122,7 @@
 
   .logo img {
     display: block;
-    height: 34px;
+    height: var(--logo-height);
     width: auto;
     object-fit: contain;
   }
@@ -159,7 +174,7 @@
 
   /* Sidebar */
   .sidebar {
-    width: 240px;
+    width: var(--left-panel-width);
     background: var(--surface);
     border-right: 1px solid var(--border);
     display: flex;
@@ -367,7 +382,7 @@
   }
 
   .right-panel {
-    width: 200px;
+    width: var(--right-panel-width);
     background: var(--surface);
     border-left: 1px solid var(--border);
     display: flex;
@@ -493,6 +508,59 @@
   }
 
 
+  .interface-scale-panel {
+    background: linear-gradient(135deg, rgba(92,252,160,0.08), rgba(124,92,252,0.10));
+    border-color: rgba(92,252,160,0.28);
+  }
+
+  .interface-scale-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 10px;
+  }
+
+  .interface-scale-value {
+    min-width: 64px;
+    padding: 6px 10px;
+    border: 1px solid rgba(92,252,160,0.32);
+    border-radius: 8px;
+    background: rgba(0,0,0,0.18);
+    color: var(--green);
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-align: center;
+  }
+
+  .interface-scale-slider {
+    margin: 8px 0 14px !important;
+  }
+
+  .interface-scale-presets {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .interface-scale-presets .btn {
+    width: 100%;
+    min-width: 0;
+    padding-left: 8px;
+    padding-right: 8px;
+  }
+
+  .interface-scale-presets .btn.active {
+    border-color: var(--green);
+    color: var(--green);
+    background: rgba(92,252,160,0.09);
+  }
+
+  .interface-scale-note {
+    margin-top: 10px;
+  }
+
+
   .install-app-panel {
     background: linear-gradient(135deg, rgba(124,92,252,0.13), rgba(252,92,125,0.07));
     border-color: rgba(124,92,252,0.45);
@@ -591,17 +659,15 @@
   }
 
   @media (max-width: 900px) {
-    :root { --mobile-header-h: 58px; --mobile-dock-h: 64px; }
-
     header {
       height: calc(var(--mobile-header-h) + env(safe-area-inset-top));
-      padding: env(safe-area-inset-top) 10px 0;
+      padding: env(safe-area-inset-top) max(8px, calc(var(--header-padding-x) / 2)) 0;
       gap: 8px;
       z-index: 500;
     }
 
     .logo { min-width: 0; gap: 7px; }
-    .logo img, .logo img[style] { height: 42px !important; max-width: min(48vw, 250px); }
+    .logo img, .logo img[style] { height: var(--mobile-logo-height) !important; max-width: min(48vw, calc(var(--mobile-panel-max-width) - 110px)); }
     .logo span { font-size: 0.58rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .mobile-only { display: inline-flex; }
     .mobile-icon { display: inline-flex; flex: 0 0 auto; }
@@ -637,8 +703,8 @@
       position: fixed;
       top: calc(var(--mobile-header-h) + env(safe-area-inset-top));
       bottom: calc(var(--mobile-dock-h) + env(safe-area-inset-bottom));
-      width: min(88vw, 360px);
-      max-width: 360px;
+      width: min(88vw, var(--mobile-panel-max-width));
+      max-width: var(--mobile-panel-max-width);
       z-index: 450;
       box-shadow: 0 18px 55px rgba(0,0,0,0.55);
       transition: transform 0.22s ease;
@@ -732,6 +798,7 @@
     .modal-header { padding: 12px; }
     .modal-body { padding: 12px; }
     .hotkey-grid { grid-template-columns: 1fr 1fr; }
+    .interface-scale-presets { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 
     #canvas { cursor: default; }
   }
@@ -742,11 +809,12 @@
     .header-actions .btn-primary { grid-column: auto; }
     .stats { opacity: 0.88; }
     .hotkey-grid { grid-template-columns: 1fr; }
+    .interface-scale-presets { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   }
 
   @media (max-height: 520px) and (orientation: landscape) and (max-width: 900px) {
-    :root { --mobile-header-h: 48px; --mobile-dock-h: 54px; }
-    .logo img, .logo img[style] { height: 36px !important; }
+    :root { --mobile-header-h: var(--mobile-landscape-header-h); --mobile-dock-h: var(--mobile-landscape-dock-h); }
+    .logo img, .logo img[style] { height: var(--mobile-landscape-logo-height) !important; }
     .mobile-icon { width: 40px; height: 40px; }
     .mobile-dock { padding-top: 4px; }
     .dock-btn { min-height: 42px; flex-direction: row; }
@@ -765,22 +833,39 @@
     <button class="btn" onclick="clearAll()">Clear All</button>
     <button class="btn" onclick="convertToMesh()">Convert to Mesh</button>
     <button class="btn btn-primary" onclick="exportGLB()">⬇ Export GLB</button>
-    <button class="btn" onclick="openAboutDialog()">About</button>
+    <button class="btn" onclick="openSettingsDialog()">Settings</button>
   </div>
   <button class="btn mobile-icon mobile-only" id="mobile-actions-toggle" type="button" aria-label="Open project actions" aria-expanded="false" onclick="toggleHeaderActions()">⋮</button>
 </header>
 <div class="drawer-backdrop" id="drawer-backdrop" onclick="closeMobileUI()"></div>
 
-<div class="modal-overlay" id="about-modal" onclick="handleAboutOverlayClick(event)">
-  <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="about-modal-title">
+<div class="modal-overlay" id="settings-modal" onclick="handleSettingsOverlayClick(event)">
+  <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="settings-modal-title">
     <div class="modal-header">
       <div class="modal-title-wrap">
-        <div class="modal-title" id="about-modal-title">StickyMesh © — About</div>
-        <div class="modal-subtitle">License disclaimer and quick use guide</div>
+        <div class="modal-title" id="settings-modal-title">StickyMesh © — Settings</div>
+        <div class="modal-subtitle">Interface, installation, license, and usage controls</div>
       </div>
-      <button class="btn" onclick="closeAboutDialog()">Close</button>
+      <button class="btn" onclick="closeSettingsDialog()">Close</button>
     </div>
     <div class="modal-body">
+      <div class="info-card interface-scale-panel" id="interface-scale-section">
+        <div class="interface-scale-head">
+          <h3 style="margin-bottom:0">Interface Scale</h3>
+          <output class="interface-scale-value" id="interface-scale-value" for="interface-scale-slider">100%</output>
+        </div>
+        <p>Resize StickyMesh controls, menus, side panels, and mobile navigation without changing the size of the 3D sculpture.</p>
+        <input class="interface-scale-slider" type="range" id="interface-scale-slider" min="75" max="140" step="5" value="100" aria-label="Interface scale percentage" oninput="setInterfaceScale(this.value)">
+        <div class="interface-scale-presets" aria-label="Interface scale presets">
+          <button type="button" class="btn" data-ui-scale="75" onclick="setInterfaceScale(75)">75%</button>
+          <button type="button" class="btn" data-ui-scale="90" onclick="setInterfaceScale(90)">90%</button>
+          <button type="button" class="btn" data-ui-scale="100" onclick="setInterfaceScale(100)">100%</button>
+          <button type="button" class="btn" data-ui-scale="115" onclick="setInterfaceScale(115)">115%</button>
+          <button type="button" class="btn" data-ui-scale="130" onclick="setInterfaceScale(130)">130%</button>
+        </div>
+        <p class="interface-scale-note">Your selection is saved on this device. Use 90% for more workspace or 115–130% for larger touch targets and text.</p>
+      </div>
+
       <div class="info-card install-app-panel" id="install-app-section">
         <h3>Download / Install App</h3>
         <p>Install StickyMesh on this device to launch it from your desktop, Start menu, app list, or home screen instead of returning to the browser each time.</p>
@@ -2852,22 +2937,88 @@ async function handleProjectFileSelected(event) {
   }
 }
 
-function openAboutDialog() {
-  const modal = document.getElementById('about-modal');
+const INTERFACE_SCALE_STORAGE_KEY = 'stickymesh.interfaceScale.v1';
+const DEFAULT_INTERFACE_SCALE = 100;
+
+function normalizeInterfaceScale(value) {
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed)) return DEFAULT_INTERFACE_SCALE;
+  return Math.min(140, Math.max(75, Math.round(parsed / 5) * 5));
+}
+
+function setInterfaceScale(value, options = {}) {
+  const percent = normalizeInterfaceScale(value);
+  const scale = percent / 100;
+  const rootStyle = document.documentElement.style;
+  rootStyle.setProperty('--ui-scale', String(scale));
+  rootStyle.setProperty('--ui-font-size', (16 * scale).toFixed(2) + 'px');
+  rootStyle.setProperty('--header-height', (52 * scale).toFixed(2) + 'px');
+  rootStyle.setProperty('--header-padding-x', (20 * scale).toFixed(2) + 'px');
+  rootStyle.setProperty('--logo-height', (34 * scale).toFixed(2) + 'px');
+  rootStyle.setProperty('--left-panel-width', (240 * scale).toFixed(2) + 'px');
+  rootStyle.setProperty('--right-panel-width', (200 * scale).toFixed(2) + 'px');
+  rootStyle.setProperty('--mobile-header-h', (58 * scale).toFixed(2) + 'px');
+  rootStyle.setProperty('--mobile-dock-h', (64 * scale).toFixed(2) + 'px');
+  rootStyle.setProperty('--mobile-logo-height', (42 * scale).toFixed(2) + 'px');
+  rootStyle.setProperty('--mobile-panel-max-width', (360 * scale).toFixed(2) + 'px');
+  rootStyle.setProperty('--mobile-landscape-header-h', (48 * scale).toFixed(2) + 'px');
+  rootStyle.setProperty('--mobile-landscape-dock-h', (54 * scale).toFixed(2) + 'px');
+  rootStyle.setProperty('--mobile-landscape-logo-height', (36 * scale).toFixed(2) + 'px');
+
+  const slider = document.getElementById('interface-scale-slider');
+  const output = document.getElementById('interface-scale-value');
+  if (slider) slider.value = String(percent);
+  if (output) output.textContent = percent + '%';
+
+  document.querySelectorAll('[data-ui-scale]').forEach((button) => {
+    const isActive = Number(button.dataset.uiScale) === percent;
+    button.classList.toggle('active', isActive);
+    button.setAttribute('aria-pressed', String(isActive));
+  });
+
+  if (options.persist !== false) {
+    try {
+      localStorage.setItem(INTERFACE_SCALE_STORAGE_KEY, String(percent));
+    } catch (error) {
+      console.warn('StickyMesh could not save interface scale:', error);
+    }
+  }
+
+  requestAnimationFrame(() => {
+    if (typeof onResize === 'function') onResize();
+  });
+
+  if (!options.silent) showToast('Interface scale: ' + percent + '%');
+  return percent;
+}
+
+function loadInterfaceScale() {
+  let saved = DEFAULT_INTERFACE_SCALE;
+  try {
+    saved = localStorage.getItem(INTERFACE_SCALE_STORAGE_KEY) || DEFAULT_INTERFACE_SCALE;
+  } catch (error) {
+    console.warn('StickyMesh could not read interface scale:', error);
+  }
+  setInterfaceScale(saved, { persist: false, silent: true });
+}
+
+function openSettingsDialog() {
+  const modal = document.getElementById('settings-modal');
   if (!modal) return;
   modal.classList.add('open');
+  setInterfaceScale(getComputedStyle(document.documentElement).getPropertyValue('--ui-scale').trim() * 100, { persist: false, silent: true });
   refreshStickyMeshInstallUI();
 }
 
-function closeAboutDialog() {
-  const modal = document.getElementById('about-modal');
+function closeSettingsDialog() {
+  const modal = document.getElementById('settings-modal');
   if (!modal) return;
   modal.classList.remove('open');
 }
 
-function handleAboutOverlayClick(event) {
-  if (event.target && event.target.id === 'about-modal') {
-    closeAboutDialog();
+function handleSettingsOverlayClick(event) {
+  if (event.target && event.target.id === 'settings-modal') {
+    closeSettingsDialog();
   }
 }
 
@@ -2958,7 +3109,7 @@ async function requestStickyMeshInstall() {
     if (choice && choice.outcome === 'accepted') {
       refreshStickyMeshInstallUI('Installation accepted. StickyMesh will appear with your installed apps.');
     } else {
-      refreshStickyMeshInstallUI('Installation was dismissed. You can install StickyMesh later from this About section.');
+      refreshStickyMeshInstallUI('Installation was dismissed. You can install StickyMesh later from this Settings section.');
     }
   } catch (error) {
     console.error('StickyMesh install prompt failed:', error);
@@ -3573,13 +3724,14 @@ function animate() {
 }
 
 // Init
+loadInterfaceScale();
 init();
 renderCustomPresets();
 showToast(coarsePointerMedia.matches ? 'Welcome! Tap Sculpt to begin.' : 'Welcome to StickyMesh ©! Click to add balls.');
 
 document.addEventListener('keydown', (event) => {
   if (event.key === 'Escape') {
-    closeAboutDialog();
+    closeSettingsDialog();
     closeMobileUI();
   }
 });
