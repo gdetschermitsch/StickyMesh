@@ -492,6 +492,41 @@
     padding: 0;
   }
 
+
+  .install-app-panel {
+    background: linear-gradient(135deg, rgba(124,92,252,0.13), rgba(252,92,125,0.07));
+    border-color: rgba(124,92,252,0.45);
+  }
+
+  .install-app-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+    margin-top: 12px;
+  }
+
+  .install-app-btn {
+    min-height: 42px;
+    flex: 0 1 auto;
+  }
+
+  .install-app-status {
+    margin-top: 10px;
+    min-height: 1.5em;
+    color: var(--text) !important;
+  }
+
+  .install-app-help {
+    margin-top: 10px;
+    padding: 10px 12px;
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 10px;
+    background: rgba(0,0,0,0.16);
+  }
+
+  .install-app-help[hidden] { display: none; }
+
   .hotkey-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
@@ -746,6 +781,21 @@
       <button class="btn" onclick="closeAboutDialog()">Close</button>
     </div>
     <div class="modal-body">
+      <div class="info-card install-app-panel" id="install-app-section">
+        <h3>Download / Install App</h3>
+        <p>Install StickyMesh on this device to launch it from your desktop, Start menu, app list, or home screen instead of returning to the browser each time.</p>
+        <div class="install-app-actions">
+          <button type="button" class="btn btn-primary install-app-btn" id="install-app-btn" onclick="requestStickyMeshInstall()">Install StickyMesh App</button>
+        </div>
+        <p class="install-app-status" id="install-app-status" role="status" aria-live="polite">Checking whether app installation is available…</p>
+        <div class="install-app-help" id="ios-install-help" hidden>
+          <p><strong>iPhone or iPad:</strong> open StickyMesh in Safari, tap the Share button, choose <strong>Add to Home Screen</strong>, then tap <strong>Add</strong>.</p>
+        </div>
+        <div class="install-app-help" id="manual-install-help" hidden>
+          <p><strong>Desktop or Android:</strong> when the browser does not show its native prompt, open the browser menu and choose <strong>Install StickyMesh</strong>, <strong>Install app</strong>, or <strong>Add to Home screen</strong>.</p>
+        </div>
+      </div>
+
       <div class="info-card">
         <h3>License Disclaimer</h3>
         <p>StickyMesh © This project is NOT open source. All rights reserved under the CRUXTAIN™ Public Use License. Unauthorized reproduction, redistribution, or rebranding of CRUX-TAIN™
@@ -2806,6 +2856,7 @@ function openAboutDialog() {
   const modal = document.getElementById('about-modal');
   if (!modal) return;
   modal.classList.add('open');
+  refreshStickyMeshInstallUI();
 }
 
 function closeAboutDialog() {
@@ -2818,6 +2869,125 @@ function handleAboutOverlayClick(event) {
   if (event.target && event.target.id === 'about-modal') {
     closeAboutDialog();
   }
+}
+
+// ============================================================
+// Installable app / PWA
+// ============================================================
+let stickyMeshInstallPrompt = null;
+
+function isStickyMeshStandalone() {
+  return window.matchMedia('(display-mode: standalone)').matches ||
+    window.matchMedia('(display-mode: window-controls-overlay)').matches ||
+    window.navigator.standalone === true;
+}
+
+function isStickyMeshIOS() {
+  return /iphone|ipad|ipod/i.test(window.navigator.userAgent) ||
+    (window.navigator.platform === 'MacIntel' && window.navigator.maxTouchPoints > 1);
+}
+
+function refreshStickyMeshInstallUI(customMessage = '') {
+  const button = document.getElementById('install-app-btn');
+  const status = document.getElementById('install-app-status');
+  const iosHelp = document.getElementById('ios-install-help');
+  const manualHelp = document.getElementById('manual-install-help');
+  if (!button || !status || !iosHelp || !manualHelp) return;
+
+  iosHelp.hidden = true;
+  manualHelp.hidden = true;
+  button.disabled = false;
+
+  if (isStickyMeshStandalone()) {
+    button.textContent = 'StickyMesh Is Installed';
+    button.disabled = true;
+    status.textContent = customMessage || 'StickyMesh is already running as an installed app.';
+    return;
+  }
+
+  if (window.location.protocol === 'file:') {
+    button.textContent = 'Installation Requires HTTPS';
+    status.textContent = customMessage || 'Deploy StickyMesh to an HTTPS website, then open that hosted page to install it.';
+    manualHelp.hidden = false;
+    return;
+  }
+
+  if (isStickyMeshIOS()) {
+    button.textContent = 'Show iPhone / iPad Steps';
+    status.textContent = customMessage || 'Apple devices install StickyMesh through Safari’s Add to Home Screen command.';
+    iosHelp.hidden = false;
+    return;
+  }
+
+  button.textContent = 'Install StickyMesh App';
+  if (stickyMeshInstallPrompt) {
+    status.textContent = customMessage || 'StickyMesh is ready to install on this device.';
+  } else {
+    status.textContent = customMessage || 'Use the button after the browser finishes checking install availability.';
+    manualHelp.hidden = false;
+  }
+}
+
+async function requestStickyMeshInstall() {
+  if (isStickyMeshStandalone()) {
+    refreshStickyMeshInstallUI('StickyMesh is already installed on this device.');
+    return;
+  }
+
+  if (window.location.protocol === 'file:') {
+    refreshStickyMeshInstallUI('Installation cannot run from a local file. Upload the complete app to an HTTPS host first.');
+    return;
+  }
+
+  if (isStickyMeshIOS()) {
+    refreshStickyMeshInstallUI('In Safari, tap Share, choose Add to Home Screen, then tap Add.');
+    return;
+  }
+
+  if (!stickyMeshInstallPrompt) {
+    refreshStickyMeshInstallUI('The native prompt is not available yet. Use the browser menu and choose Install StickyMesh or Install app.');
+    return;
+  }
+
+  const promptEvent = stickyMeshInstallPrompt;
+  stickyMeshInstallPrompt = null;
+
+  try {
+    await promptEvent.prompt();
+    const choice = await promptEvent.userChoice;
+    if (choice && choice.outcome === 'accepted') {
+      refreshStickyMeshInstallUI('Installation accepted. StickyMesh will appear with your installed apps.');
+    } else {
+      refreshStickyMeshInstallUI('Installation was dismissed. You can install StickyMesh later from this About section.');
+    }
+  } catch (error) {
+    console.error('StickyMesh install prompt failed:', error);
+    refreshStickyMeshInstallUI('The browser could not open its install prompt. Use the browser menu and choose Install app.');
+  }
+}
+
+window.addEventListener('beforeinstallprompt', (event) => {
+  event.preventDefault();
+  stickyMeshInstallPrompt = event;
+  refreshStickyMeshInstallUI('StickyMesh is ready to install on this device.');
+});
+
+window.addEventListener('appinstalled', () => {
+  stickyMeshInstallPrompt = null;
+  refreshStickyMeshInstallUI('StickyMesh was installed successfully.');
+});
+
+window.matchMedia('(display-mode: standalone)').addEventListener?.('change', () => {
+  refreshStickyMeshInstallUI();
+});
+
+if ('serviceWorker' in navigator &&
+    (window.location.protocol === 'https:' || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./service-worker.js', { scope: './' }).catch((error) => {
+      console.error('StickyMesh service worker registration failed:', error);
+    });
+  });
 }
 
 function loadPreset(name) {
